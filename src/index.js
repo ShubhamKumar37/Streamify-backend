@@ -1,0 +1,38 @@
+import express from 'express'
+import dotenv from 'dotenv'
+import cookieParser from 'cookie-parser';
+import { ErrorHandler } from './middlewares/index.js';
+import { dbConnect } from './config/dbConnect.config.js';
+import authRoute from './routes/auth.route.js';
+import userRoute from './routes/user.route.js';
+import chatRoute from './routes/chat.route.js';
+import cors from 'cors';
+
+
+dotenv.config();
+
+const app = express();
+
+dbConnect();
+
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+}));
+
+app.use(express.json());
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
+app.use(ErrorHandler);
+
+app.use("/auth", authRoute);
+app.use("/user", userRoute);
+app.use("/chat", chatRoute);
+
+app.get("/", (req, res) => {
+    res.send("Hi this is a backend server ");
+})
+
+app.listen(process.env.PORT, () => {
+    console.log(`Server is running on this url http://localhost:${process.env.PORT}`);
+});
