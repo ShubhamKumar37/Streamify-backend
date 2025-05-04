@@ -44,6 +44,7 @@ class AuthController {
             httpOnly: true,
             secure: process.env.NODE_ENV !== "development",
             maxAge: 1 * 24 * 60 * 60 * 1000,
+            sameSite: "Strict",
         });
 
         return res.status(200).json(new ApiResponse(200, "Login successful", { ...user._doc, token }));
