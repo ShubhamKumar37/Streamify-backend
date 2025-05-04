@@ -10,11 +10,11 @@ const authToken = asyncHandler(async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded) throw new ApiError(401, "Unauthorized");
-
-    const user = await User.findById(decoded.id).select("-password");
+ 
+    const user = await User.findById(decoded._id).select("-password");
     if (!user) throw new ApiError(401, "Unauthorized");
 
-    const streamToken = generateStreamToken(req.user._id);
+    const streamToken = generateStreamToken(decoded._id);
     if (!streamToken) throw new ApiError(401, "Unauthorized");
 
     req.user = user;

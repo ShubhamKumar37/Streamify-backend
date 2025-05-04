@@ -9,25 +9,25 @@ import chatRoute from './routes/chat.route.js';
 import cors from 'cors';
 
 
-dotenv.config();
+dotenv.config({ path: '.env' });
 
 const app = express();
 
 dbConnect();
 
-app.use(cors({
-    origin: 'http://localhost:5173',
-    credentials: true,
-}));
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
-app.use(ErrorHandler);
 
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+}));
 app.use("/auth", authRoute);
 app.use("/user", userRoute);
 app.use("/chat", chatRoute);
+app.use(ErrorHandler);
 
 app.get("/", (req, res) => {
     res.send("Hi this is a backend server ");

@@ -1,10 +1,13 @@
 import { ApiError } from "../utils/ApiError.util.js";
 
 const schemaValidator = (schema) => (req, res, next) => {
-    const { error } = schema.validate(req.body);
+    const { error } = schema.validate(req.body, { abortEarly: false });
+
     if (error) {
-        throw new ApiError(400, error.message);
+        const errorMessages = error.details.map((detail) => detail.message);
+        throw new ApiError(400, errorMessages);
     }
+
     next();
 };
 

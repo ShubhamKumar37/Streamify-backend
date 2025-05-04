@@ -30,10 +30,10 @@ class UserController {
         const { id: receiver } = req.params;
 
         if (sender.equals(receiver)) throw new ApiError(400, "You cannot send friend request to yourself");
-        
+
         const receiverExists = await User.findById(receiver);
         if (!receiverExists) throw new ApiError(400, "Receiver not found");
-        if(receiverExists.friends.includes(sender)) throw new ApiError(400, "You are already friends with this user");  
+        if (receiverExists.friends.includes(sender)) throw new ApiError(400, "You are already friends with this user");
 
         const existingRequest = await FriendRequest.findOne({ sender, receiver });
         if (existingRequest) throw new ApiError(400, "Friend request already sent");
@@ -48,8 +48,9 @@ class UserController {
         const { id: requestId } = req.params;
 
         const friendRequest = await FriendRequest.findById(requestId);
-        if(!friendRequest) throw new ApiError(400, "Friend request not found");
-        if(friendRequest.sender.equals(user._id)) throw new ApiError(400, "You cannot accept your own friend request");
+        if (!friendRequest) throw new ApiError(400, "Friend request not found");
+        if (friendRequest.sender.equals(user._id)) throw new ApiError(400, "You cannot accept your own friend request");
+        if (friendRequest.status === "accepted") throw new ApiError(400, "Friend request already accepted");
 
         friendRequest.status = "accepted";
         await friendRequest.save();
@@ -63,7 +64,7 @@ class UserController {
     getFriendRequests = asyncHandler(async (req, res) => {
         const user = req.user;
 
-        const incomingRequests = await FriendRequest.find({ receiver: user._id }).populate("sender", "name profileImage learningLanguage nativeLanguage");
+        const incomingRequests = await FriendRequest.find({ receiver: user._id, status: "pending" }).populate("sender", "name profileImage learningLanguage nativeLanguage");
         const acceptedRequests = await FriendRequest.find({ sender: user._id, status: "accepted" }).populate("receiver", "name profileImage learningLanguage nativeLanguage");
 
         return res.status(200).json(new ApiResponse(200, "Friend requests fetched successfully", { incomingRequests, acceptedRequests }));

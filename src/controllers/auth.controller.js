@@ -3,6 +3,8 @@ import User from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.util.js";
 import jwt from "jsonwebtoken";
 import { ApiError } from "../utils/ApiError.util.js";
+import Otp from "../models/otp.model.js";
+import { upsertStreamUser } from "../config/stream.config.js";
 
 class AuthController {
     register = asyncHandler(async (req, res) => {
@@ -16,15 +18,10 @@ class AuthController {
 
         // Upserting user in Stream
         try {
-            const response = await upsertStreamUser({
-                id: user._id.toString(),
-                name: user.name,
-                image: user.profileImage,
-                email: user.email,
-            });
+            const response = await upsertStreamUser(user);
             console.log("Response from upsertStreamUser :: ", response);
         } catch (error) {
-            console.error("Error upserting Stream user:", error);
+            console.log("Error upserting Stream user:", error);
             throw new ApiError(500, "Internal Server Error");
         }
 
@@ -41,7 +38,7 @@ class AuthController {
         const isPasswordCorrect = await user.comparePassword(password);
         if (!isPasswordCorrect) throw new ApiError(400, "Invalid password");
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
         res.cookie("jwt", token, {
             httpOnly: true,
@@ -58,32 +55,27 @@ class AuthController {
     });
 
     onboard = asyncHandler(async (req, res) => {
-        const { name, bio, location, nativeLanguage, learningLanguage } = req.body;
+        const { bio, location, nativeLanguage, learningLanguage, profileImage } = req.body;
 
         const user = req.user;
         const updateData = {
-            ...(name && { name }),
             ...(bio && { bio }),
             ...(location && { location }),
             ...(nativeLanguage && { nativeLanguage }),
             ...(learningLanguage && { learningLanguage }),
+            ...(profileImage && { profileImage }),
             onBoard: true,
         };
 
         const updatedUser = await User.findByIdAndUpdate(user._id, updateData, { new: true });
         if (!updatedUser) throw new ApiError(400, "Failed to onboard user");
 
-        // Upserting user in Stream
+        
         try {
-            const response = await upsertStreamUser({
-                id: updatedUser._id.toString(),
-                name: updatedUser.name,
-                image: updatedUser.profileImage,
-                email: updatedUser.email,
-            });
+            const response = await upsertStreamUser(updatedUser);
             console.log("Response from upsertStreamUser :: ", response);
         } catch (error) {
-            console.error("Error upserting Stream user:", error);
+            console.log("Error upserting Stream user:", error);
             throw new ApiError(500, "Internal Server Error");
         }
 
@@ -93,6 +85,27 @@ class AuthController {
     me = asyncHandler(async (req, res) => {
         const user = req.user;
         return res.status(200).json(new ApiResponse(200, "User fetched successfully", user));
+    });
+
+    sendOtp = asyncHandler(async (req, res) => {
+        const { email } = req.body;
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        await Otp.create({ email, otp });
+        return res.status(200).json(new ApiResponse(200, "OTP sent successfully", otp));
+    });
+
+    changePassword = asyncHandler(async (req, res) => {
+        const { email, otp, password } = req.body;
+        const otpDoc = await Otp.findOne({ email, otp }).sort({ createdAt: -1 });
+        if (!otpDoc) throw new ApiError(400, "Invalid OTP");
+
+        const user = await User.findOne({ email });
+        if (!user) throw new ApiError(400, "User not found");
+
+        user.password = password;
+        await user.save();
+
+        return res.status(200).json(new ApiResponse(200, "Password changed successfully"));
     });
 }
 
