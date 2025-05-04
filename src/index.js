@@ -21,7 +21,13 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: [
+        'http://localhost:5173',
+        'https://chatter-frontend-rouge.vercel.app',
+        'https://chatter-frontend-rouge.vercel.app',
+        'https://chatter-frontend-git-main-shubham-kumars-projects-c7fe827c.vercel.app',
+        'https://chatter-frontend-nyvp0ljxc-shubham-kumars-projects-c7fe827c.vercel.app'
+    ],
     credentials: true,
 }));
 app.use("/auth", authRoute);
