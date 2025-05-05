@@ -9,7 +9,14 @@ const otpSchema = new mongoose.Schema({
 
 otpSchema.pre("save", async function (next) {
     try {
-        await sendEmail(this.email, "Here is your OTP", this.otp);
+        const mailBody = `
+        <div>
+            <h1>Here is your OTP</h1>
+            <p>Your OTP is ${this.otp}. Click the link below to reset your password.</p>
+            <a href="${process.env.FRONTEND_URL}/change-password">Reset Password</a>
+        </div>
+        `
+        await sendEmail(this.email, "Here is your OTP", mailBody);
         next();
     } catch (error) {
         next(error);
