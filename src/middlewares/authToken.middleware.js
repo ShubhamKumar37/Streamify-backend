@@ -5,7 +5,8 @@ import { generateStreamToken } from "../config/stream.config.js";
 import { asyncHandler } from "../utils/asyncHandler.util.js";
 
 const authToken = asyncHandler(async (req, res, next) => {
-    const token = req.cookies.jwt;
+    const token = req.cookies.jwt || req.body?.jwt;
+    // console.log(token);
     if (!token) throw new ApiError(401, "Unauthorized");
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);

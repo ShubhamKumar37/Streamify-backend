@@ -10,7 +10,7 @@ router.post("/register", validate(registerSchema), register);
 router.post("/login", validate(loginSchema), login);
 router.post("/logout", authToken, logout);
 router.post("/onboard", authToken, validate(onboardSchema), onboard);
-router.get("/me", authToken, me);
+router.put("/me", authToken, me);
 router.post("/send-otp", sendOtp);
 router.post("/change-password", validate(changePasswordSchema), changePassword);
 
