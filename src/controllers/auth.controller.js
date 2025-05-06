@@ -44,7 +44,7 @@ class AuthController {
             httpOnly: true,
             secure: true,
             maxAge: 86400, 
-            sameSite: "None",
+            // sameSite: "None",
         });
 
         return res.status(200).json(new ApiResponse(200, "Login successful", { ...user._doc, token }));
